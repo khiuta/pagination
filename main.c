@@ -76,7 +76,8 @@ void parse_results(SimulationResult results, char* algorithm, int num_frames, in
   printf("Frames: %i\n", results.num_frames);
   printf("Referências: %i\n", total_refs);
   printf("Falta de páginas: %i\n", results.page_faults);
-  printf("Taxa de faltas: %.2f%\n", (float)total_refs / (float)results.page_faults);
+  float page_fault_percent =  (float)results.page_faults / (float)total_refs;
+  printf("Taxa de faltas: %.2f%%\n", page_fault_percent * 100);
   printf("Evicções: %i\n", results.evictions);
   printf("Escritas em disco: %i\n", results.disk_writes);
   printf("Conjunto residente final:\n");
