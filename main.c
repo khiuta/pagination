@@ -67,6 +67,7 @@ SimulationResult run_algo(char* algorithm, Reference* refs, int num_refs, int nu
   SimulationResult results;
   if(strcmp(algorithm, "FIFO") == 0 || strcmp(algorithm, "fifo") == 0) results = run_fifo(refs, num_refs, num_frames, verbose);
   else if(strcmp(algorithm, "LRU") == 0 || strcmp(algorithm, "lru") == 0) results = run_lru(refs, num_refs, num_frames, verbose);
+  else if(strcmp(algorithm, "OPT") == 0 || strcmp(algorithm, "opt") == 0) results = run_opt(refs, num_refs, num_frames, verbose);
 
   return results;
 }

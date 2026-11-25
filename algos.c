@@ -50,7 +50,7 @@ SimulationResult run_fifo(const Reference *refs, int num_refs, int num_frames, b
 
     while(i < num_refs){
       results.total_refs++;
-			if(refs[i].op == "W") results.disk_writes++;
+			if(refs[i].op == 'W') results.disk_writes++;
 
       int frame_page = find_page(frames, num_frames, refs[i].page_id);
       // if the page isnt in any on the frames, there is a page fault
@@ -156,7 +156,72 @@ SimulationResult run_lru(const Reference *refs, int num_refs, int num_frames, bo
 }
 
 SimulationResult run_opt(const Reference *refs, int num_refs, int num_frames, bool verbose) {
-    // Optimal implementation
+    int i = 0;
+    Frame* frames = init_frames(num_frames);
+    SimulationResult results;
+    results.num_frames = num_frames;
+		results.disk_writes = 0;
+		results.total_refs = 0;
+		results.evictions = 0;
+		results.page_faults = 0;
+
+    while(i < num_refs){
+      results.total_refs++;
+      if(refs[i].op == 'W') results.disk_writes++;
+
+      int page_frame = find_page(frames, num_frames, refs[i].page_id);
+
+      if(page_frame == -1){
+        results.page_faults++;
+
+        int free_frame = find_free_frame(frames, num_frames);
+
+        if(free_frame == -1){
+          // use the optimal strategy to evict a page
+          int most_distant_access = -1;
+          int most_distant_idx = -1;
+          bool will_be_referenced = false;
+
+          for(int i = 0; i < num_frames; i++){
+            for(int j = results.total_refs; i < num_refs; j++){
+              if(frames[i].page_id == refs[j].page_id){
+                if(j - results.total_refs > most_distant_access){
+                most_distant_access = j - results.total_refs;
+                most_distant_idx = i;
+                break;
+                } 
+                will_be_referenced = true;
+              }
+            }
+            // if this page wont be referenced again, prioritize it
+            if(will_be_referenced == false){
+              most_distant_idx = i;
+              break;
+            }
+          }
+
+          frames[most_distant_idx].page_id = -1;
+          free_frame = most_distant_idx;
+          results.evictions++;
+        }
+
+        frames[free_frame].last_used = i;
+        // loaded at counts only on misses
+        frames[free_frame].loaded_at = i;
+        // freq count resets on a miss because a page was evicted from this frame
+        frames[free_frame].freq_count = 1;
+        frames[free_frame].page_id = refs[i].page_id;
+      } else {
+        frames[page_frame].last_used = i;
+				frames[page_frame].freq_count++;
+      }
+
+      i++;
+    }
+
+    results.final_frames = frames;
+
+    return results;
 }
 
 SimulationResult run_clock(const Reference *refs, int num_refs, int num_frames, bool verbose) {
